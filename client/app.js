@@ -60,13 +60,33 @@ function renderPktCard(p) {
 function applyViewportVars() {
   const top = document.querySelector('.topbar');
   const topH = top ? top.offsetHeight + 18 /* .viz の margin-top */ : 120;
-  const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  const vhPx = (window.visualViewport?.height || window.innerHeight);
+  document.documentElement.style.setProperty('--vh', `${vhPx * 0.01}px`);
   document.documentElement.style.setProperty('--topbarH', `${topH}px`);
 }
-window.addEventListener('resize', applyViewportVars);
-window.addEventListener('orientationchange', applyViewportVars);
-applyViewportVars();
+
+// 画面に全体を収めるための縮尺（--ui-scale）を自動調整
+function fitToScreen() {
+  if (window.matchMedia('(max-width: 768px)').matches) {  // スマホでは縮小しない
+    document.documentElement.style.setProperty('--ui-scale', '1');
+    return;
+  }
+  const top = document.querySelector('.topbar');
+  const viz = document.querySelector('.viz');
+  if (!top || !viz) return;
+  const vh = (window.visualViewport?.height || window.innerHeight);
+  const need = top.offsetHeight + 16 /*余白*/ + viz.scrollHeight;
+  const scale = Math.min(1, Math.max(0.65, (vh - 4) / need)); // 0.65〜1.00
+  document.documentElement.style.setProperty('--ui-scale', scale.toFixed(3));
+}
+
+// 2つまとめて呼ぶ関数に差し替え
+const relayout = () => { applyViewportVars(); fitToScreen(); };
+window.addEventListener('resize', relayout);
+window.addEventListener('orientationchange', relayout);
+window.visualViewport && window.visualViewport.addEventListener('resize', relayout);
+document.addEventListener('DOMContentLoaded', relayout);
+relayout();
 
 // アクセシビリティ: 値表示
 const updateSliders = () => {

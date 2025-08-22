@@ -1,0 +1,106 @@
+:root {
+  --bg: #0b0b0c;
+  --panel: #141417;
+  --text: #f2f4f8;
+  --muted: #b9c1d6;
+  --accent: #4ade80;
+  --primary: #60a5fa;
+  --warn: #f59e0b;
+  --error: #ef4444;
+  --ok: #22c55e;
+   /* レイアウト用（JSで設定） */
+  --vh: 1vh;
+  --topbarH: 88px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; background: var(--bg); color: var(--text); }
+body { margin: 0; font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.topbar { background: var(--panel); border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.25); position: sticky; top: 8px; z-index: 2; }
+.room { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.primary, .accent { border: none; padding: 10px 14px; border-radius: 14px; cursor: pointer; font-weight: 600; }
+.primary { background: var(--primary); color: #0b1220; }
+.accent { background: var(--accent); color: #0c160f; }
+.primary:focus, .accent:focus, input:focus { outline: 3px solid #fff3; outline-offset: 2px; }
+
+.controls { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 14px; margin-top: 12px; }
+.control { background: #0f0f13; padding: 12px; border-radius: 12px; }
+.control label { display:block; font-weight:700; margin-bottom:4px; }
+.hint { margin-left: 6px; cursor: help; color: var(--muted); }
+
+.viz { 
+  margin-top: 18px; 
+  display: grid; 
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr); 
+  gap: 16px; 
+  /* 画面高に合わせて可視化領域の高さを固定化（上部UIぶんを差し引く） */
+  height: calc(var(--vh) * 100 - var(--topbarH) - 40px);
+  min-height: 420px; /* 余裕 */
+}
+.lane { display: grid; gap: 12px; min-height: 0; }
+/* 左レーン（①②③）= 3段、右レーン（④⑤）= 2段。行比率で高さ配分 */
+.viz > .lane:nth-child(1) { grid-template-rows: 1fr 1fr 1.2fr; }
+/* ⑤のほうをやや大きめにしてボードを確保 */
+.viz > .lane:nth-child(2) { grid-template-rows: 1fr 1.6fr; }
+
+.stage { 
+  background: var(--panel); padding: 14px; border-radius: 14px; 
+  min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+}
+.stage h2 { margin: 0 0 8px; font-size: 18px; }
+.box { background: #0f0f13; padding: 10px; border-radius: 10px; min-height: 0; flex: 1; overflow: auto; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; word-break: break-all; }
+.packets { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); flex: 1; overflow: auto; }
+
+
+
+.pkt { background: #11141a; border: 2px solid #1f2736; border-radius: 10px; padding: 8px; min-width: 90px; }
+.pkt .hdr { font-size: 12px; color: var(--muted); }
+.pkt .pay { font-family: ui-monospace, monospace; font-size: 12px; display:grid; gap:4px; }
+.pkt .pay .hex{ font-size: 11px; opacity:.85; word-break: break-all; }
+.pkt .pay { display: grid; gap: 4px; }
+.pkt .pay .t  { font-size: 12px; }
+.pkt .pay .hex{ font-size: 11px; opacity: .8; }
+
+.road { position: relative; min-height: 100px; height: 100%; background: #0f0f13; border-radius: 12px; overflow: hidden; }
+.truck { position: absolute; left: -110px; top: calc(50% - 30px); width: 100px; height: 60px; background: linear-gradient(180deg,#1c2433,#0e1118); border: 2px solid #1f2736; border-radius: 10px; display: grid; place-items: center; color:#fff; }
+.truck.lost { opacity: 0.2; filter: grayscale(1); }
+.path { position: absolute; left:0; top: 50%; width: 100%; height: 2px; background: #1f2736; }
+
+.reorder { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-height: 0; }
+/* 左右のカラムラッパーを縦フレックス化して、中身を“残り高さいっぱい”に */
+.reorder > div { display: flex; flex-direction: column; min-height: 0; }
+
+#arrival { background:#0f0f13; border-radius:10px;
+  /* ← ここから追記 */
+  list-style: decimal inside; /* マーカーを内側に */
+  margin: 0;                  /* 既定の左余白を打ち消し */
+  padding: 8px 12px 8px 12px; /* 内側余白だけで整える */
+  direction: ltr;             /* 念のため左→右を固定 */
+  /* ← ここまで */
+  flex: 1 1 auto; overflow:auto; }
+/* 行が折り返されてマーカーと重ならないように（好みで外してOK） */
+#arrival li { white-space: nowrap; }
+/* 到着順リスト：エラーを赤表示、重複は薄く（任意） */
+#arrival li.bad { color: var(--error); font-weight: 700; }
+#arrival li.dup { opacity: .6; }
+/* 見やすさ向上：番号も赤になる（marker は color を継承） */
+.board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  background:#0f0f13; padding: 8px; border-radius: 10px;
+  flex: 1 1 auto; overflow:auto; min-height: 0; }
+
+.slot { border: 2px dashed #334; border-radius: 8px; height: 44px; display: grid; place-items: center; color: var(--muted); position: relative; }
+.slot.missing { animation: blink 1s infinite; border-color: var(--warn); color: var(--warn); }
+.slot.ok { border-color: var(--ok); color: var(--ok); }
+.bad { border-color: var(--error) !important; color: var(--error) !important; }
+@keyframes blink { 50% { opacity: .4; } }
+
+#status { margin-top: 8px; font-weight: 700;
+  min-height: 1.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#status.ok { color: var(--ok); }
+#connState { color: var(--muted); font-weight: 600; }
+
+/* アクセシビリティ */
+input, button { font-size: 16px; }
+button:disabled { opacity: .5; cursor: not-allowed; }

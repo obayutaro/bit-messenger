@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bit Messenger（ビット伝言ゲーム）</title>
+  <link rel="stylesheet" href="/client/style.css" />
+</head>
+<body>
+  <main>
+    <section class="topbar" aria-label="操作列">
+      <div class="room">
+        <label>ルームID: <input id="roomId" value="demo" aria-label="ルームID" /></label>
+        <button id="joinBtn" class="primary">ルームに入る</button>
+        <span id="connState" role="status" aria-live="polite">未接続</span>
+      </div>
+
+      <div class="controls" aria-label="調整">
+        <div class="control">
+          <label for="delay">遅延<span class="hint" title="とどくまでの時間。大きいほどゆっくり届きます">ⓘ</span></label>
+          <input type="range" id="delay" min="0" max="1000" value="200" />
+          <output id="delayOut">200ms</output>
+        </div>
+        <div class="control">
+          <label for="loss">損失<span class="hint" title="道で小包が消える確率。高いと欠けます">ⓘ</span></label>
+          <input type="range" id="loss" min="0" max="50" value="0" />
+          <output id="lossOut">0%</output>
+        </div>
+        <div class="control send">
+          <input id="text" placeholder="ことばを入れてね" maxlength="140" />
+          <button id="sendBtn" class="accent">送信</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="viz" aria-label="可視化領域">
+      <div class="lane" aria-label="変換のながれ">
+        <div class="stage" id="stageText" aria-live="polite">
+          <h2>① 文字</h2>
+          <div class="box" id="textView">（まだ）</div>
+        </div>
+        <div class="stage" id="stageBits" aria-live="polite">
+          <h2>② ビット列</h2>
+          <div class="box mono" id="bitsView"></div>
+        </div>
+        <div class="stage" id="stagePkts" aria-live="polite">
+          <h2>③ 小包（パケット）<span class="hint" title="小包=パケット📦">📦</span></h2>
+          <div class="packets" id="pktGen"></div>
+        </div>
+      </div>
+
+      <div class="lane" aria-label="配達と並べ直し">
+        <div class="stage" id="stageSend">
+          <h2>④ とどける（伝送）</h2>
+          <div class="road" id="road"></div>
+        </div>
+        <div class="stage" id="stageReorder">
+          <h2>⑤ ならべなおす → もとにもどす
+            <span class="hint" title="再配達🔁（自動） / 並びちがい🔀 / 中身チェック=チェックサム">ⓘ</span>
+          </h2>
+          <div class="reorder">
+            <div>
+              <h3>到着順リスト</h3>
+              <ol id="arrival"></ol>
+            </div>
+            <div>
+              <h3>並べ直しボード</h3>
+              <div class="board" id="board"></div>
+              <div id="status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/client/codec/text.js"></script>
+  <script type="module" src="/client/webrtc.js"></script>
+  <script type="module" src="/client/app.js"></script>
+</body>
+</html>
